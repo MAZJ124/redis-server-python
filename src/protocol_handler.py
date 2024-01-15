@@ -7,10 +7,6 @@ from src.types import (
     SimpleString,
 )
 
-@dataclass
-class SimpleString:
-    data: str
-
 SEPERATOR = b'\r\n'
 SEPERATOR_SIZE = len(SEPERATOR)
 
@@ -53,3 +49,6 @@ def extract_frame_from_buffer(buffer):
             return Array(array), seperator_index + SEPERATOR_SIZE
         case _:
             return None, 0
+        
+def encode_message(message):
+    return message.resp_encode()
