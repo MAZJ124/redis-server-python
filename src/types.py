@@ -44,6 +44,8 @@ class BulkString:
         return self.data == other.data
     
     def as_str(self):
+        if self.data is None:
+            return '(nil)'
         return self.data.decode()
     
     def resp_encode(self):

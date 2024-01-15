@@ -1,11 +1,12 @@
 import socket
 from src.command_handler import handle_command
+from src.datastore import DataStore
 
 from src.protocol_handler import encode_message, extract_frame_from_buffer 
 
 RECV_SIZE = 1024
 
-def handle_client_connection(client_socket):
+def handle_client_connection(client_socket, datastore):
     buffer = bytearray()
     try:
         while True:
@@ -16,7 +17,7 @@ def handle_client_connection(client_socket):
             frame, frame_size = extract_frame_from_buffer(data)
             if frame:
                 buffer = buffer[frame_size:]
-                result = handle_command(frame)
+                result = handle_command(frame, datastore)
                 print(result)
                 client_socket.send(encode_message(result))
     finally:
@@ -26,6 +27,7 @@ class Server:
     def __init__(self, port):
         self.port = port
         self._running = False
+        self._datastore = DataStore()
 
     def run(self):
         self._running = True
@@ -38,7 +40,7 @@ class Server:
             server_socket.listen()
             while self._running:
                 comm_socket, _ = server_socket.accept()
-                handle_client_connection(comm_socket)
+                handle_client_connection(comm_socket, self._datastore)
 
     def stop(self):
         self._running = False
