@@ -1,4 +1,5 @@
 import socket
+import threading
 from src.command_handler import handle_command
 from src.datastore import DataStore
 
@@ -18,7 +19,7 @@ def handle_client_connection(client_socket, datastore):
             if frame:
                 buffer = buffer[frame_size:]
                 result = handle_command(frame, datastore)
-                print(result)
+                print(result) # for dev testing purpose only
                 client_socket.send(encode_message(result))
     finally:
         client_socket.close()
@@ -40,7 +41,10 @@ class Server:
             server_socket.listen()
             while self._running:
                 comm_socket, _ = server_socket.accept()
-                handle_client_connection(comm_socket, self._datastore)
+                client_thread = threading.Thread(
+                    target=handle_client_connection, args=(comm_socket, self._datastore)
+                )
+                client_thread.start()
 
     def stop(self):
         self._running = False
