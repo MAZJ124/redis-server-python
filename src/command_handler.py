@@ -15,10 +15,25 @@ def _handle_ping(command):
     return Error('ERR wrong number of arguments for PING command')
 
 def _handle_set(command, datastore):
-    if len(command) == 3:
+    if len(command) >= 3:
         key, value = command[1].data.decode(), command[2].data.decode()
-        datastore[key] = value
-        return SimpleString('OK')
+        if len(command) == 3:
+            datastore[key] = value
+            return SimpleString('OK')
+        elif len(command) == 5:
+            expiry_mode = command[3].data.decode().upper()
+            try:
+                expiry = int(command[4].data.decode())
+            except ValueError:
+                return Error('ERR value is not an integer or out of range')
+            match expiry_mode:
+                case 'EX':
+                    datastore.set_with_expiry(key, value, expiry)
+                    return SimpleString('OK')
+                case 'PX':
+                    datastore.set_with_expiry(key, value, expiry / 1000)
+                    return SimpleString('OK')
+        return Error("ERR syntax error")
     return Error("ERR wrong number of arguments for 'set' command")
 
 def _handle_get(command, datastore):

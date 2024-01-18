@@ -25,10 +25,10 @@ def handle_client_connection(client_socket, datastore):
         client_socket.close()
 
 class Server:
-    def __init__(self, port):
+    def __init__(self, port, datastore):
         self.port = port
         self._running = False
-        self._datastore = DataStore()
+        self._datastore = datastore
 
     def run(self):
         self._running = True
