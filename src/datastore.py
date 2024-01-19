@@ -1,4 +1,6 @@
+from collections import deque
 from dataclasses import dataclass
+from itertools import islice
 from random import sample
 from threading import Lock
 from time import time, time_ns
@@ -30,6 +32,62 @@ class DataStore:
     def __setitem__(self, key, value):
         with self._lock:
             self._data[key] = DataEntry(value)
+
+    def __contains__(self, key):
+        with self._lock:
+            return key in self._data
+        
+    def __delitem__(self, key):
+        with self._lock:
+            del self._data[key]
+
+    def incr(self, key):
+        with self._lock:
+            entry = self._data.get(key, DataEntry(0))
+            value = int(entry.value) + 1
+            entry.value = str(value)
+            self._data[key] = entry
+        return value
+    
+    def decr(self, key):
+        with self._lock:
+            entry = self._data.get(key, DataEntry(0))
+            value = int(entry.value) - 1
+            entry.value = str(value)
+            self._data[key] = entry
+        return value
+    
+    def lpush(self, key, element):
+        with self._lock:
+            entry = self._data.get(key, DataEntry(deque()))
+            if not isinstance(entry.value, deque):
+                raise TypeError
+            entry.value.appendleft(element)
+            self._data[key] = entry
+            return len(entry.value)
+    
+    def rpush(self, key, element):
+        with self._lock:
+            entry = self._data.get(key, DataEntry(deque()))
+            if not isinstance(entry.value, deque):
+                raise TypeError
+            entry.value.append(element)
+            self._data[key] = entry
+            return len(entry.value)
+        
+    def lrange(self, key, start, end):
+        with self._lock:
+            entry = self._data.get(key, DataEntry(deque()))
+            if not isinstance(entry.value, deque):
+                raise TypeError
+            length = len(entry.value)
+            if start > length:
+                return []
+            if end > length:
+                end = length
+            if start < 0:
+                start = max(length + start, 0)
+            return list(islice(entry.value, start, end))
 
     def set_with_expiry(self, key, value, expiry):
         with self._lock:

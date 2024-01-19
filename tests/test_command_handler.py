@@ -55,6 +55,11 @@ from src.types import Array, BulkString, Error, Integer, SimpleString
             Array([BulkString(b"set"), SimpleString(b"key"), SimpleString(b"value"), SimpleString(b"foo")]),
             Error("ERR syntax error"),
         ),
+         # Exists Tests
+        (
+            Array([BulkString(b"exists")]),
+            Error("ERR wrong number of arguments for 'exists' command"),
+        ),
     ],
 )
 
@@ -114,3 +119,44 @@ def test_get_with_expiry():
     command = [BulkString(b"get"), SimpleString(b"key")]
     result = handle_command(command, datastore)
     assert result == BulkString(None)
+
+# Incr Tests
+def test_handle_incr_command_valid_key():
+    datastore = DataStore()
+    result = handle_command(Array([BulkString(b"incr"), SimpleString(b"ki")]), datastore)
+    assert result == Integer(1)
+    result = handle_command(Array([BulkString(b"incr"), SimpleString(b"ki")]), datastore)
+    assert result == Integer(2)
+
+
+# Decr Tests
+def test_handle_decr():
+    datastore = DataStore()
+    result = handle_command(Array([BulkString(b"incr"), SimpleString(b"kd")]), datastore)
+    assert result == Integer(1)
+    result = handle_command(Array([BulkString(b"incr"), SimpleString(b"kd")]), datastore)
+    assert result == Integer(2)
+    result = handle_command(Array([BulkString(b"decr"), SimpleString(b"kd")]), datastore)
+    assert result == Integer(1)
+    result = handle_command(Array([BulkString(b"decr"), SimpleString(b"kd")]), datastore)
+    assert result == Integer(0)
+
+# Lpush Tests
+def test_handle_lpush_lrange():
+    datastore = DataStore()
+    result = handle_command(Array([BulkString(b"lpush"), SimpleString(b"klp"), SimpleString(b"second")]), datastore)
+    assert result == Integer(1)
+    result = handle_command(Array([BulkString(b"lpush"), SimpleString(b"klp"), SimpleString(b"first")]), datastore)
+    assert result == Integer(2)
+    result = handle_command(Array([BulkString(b"lrange"), SimpleString(b"klp"), BulkString(b"0"), BulkString(b"2")]), datastore)
+    assert result == Array(data=[BulkString("first"), BulkString("second")])
+
+# Rpush Tests
+def test_handle_rpush_lrange():
+    datastore = DataStore()
+    result = handle_command(Array([BulkString(b"rpush"), SimpleString(b"krp"), SimpleString(b"first")]), datastore)
+    assert result == Integer(1)
+    result = handle_command(Array([BulkString(b"rpush"), SimpleString(b"krp"), SimpleString(b"second")]), datastore)
+    assert result == Integer(2)
+    result = handle_command(Array([BulkString(b"lrange"), SimpleString(b"krp"), BulkString(b"0"), BulkString(b"2")]), datastore)
+    assert result == Array(data=[BulkString("first"), BulkString("second")])
