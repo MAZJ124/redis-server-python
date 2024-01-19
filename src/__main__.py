@@ -20,7 +20,7 @@ def main(port=None):
   print(f"Starting PyRedis on port: {port}")
 
   datastore = DataStore()
-  expiration_monitor = threading.Thread(target=check_expiry, args=(datastore))
+  expiration_monitor = threading.Thread(target=check_expiry, args=(datastore,))
   expiration_monitor.start()
   server = Server(port, datastore)
   server.run()
