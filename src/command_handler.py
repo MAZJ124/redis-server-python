@@ -134,7 +134,7 @@ def _handle_unrecognised_command(command):
         f"ERR unknown command '{command[0].data.decode()}', with args beginning with: {args}"
     )
 
-def handle_command(command, datastore, persister):
+def handle_command(command, datastore, persister=None):
     match command[0].data.decode().upper():
         case 'ECHO':
             return _handle_echo(command)
