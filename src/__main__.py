@@ -2,6 +2,7 @@ import threading
 from time import sleep
 import typer
 from src.datastore import DataStore
+from src.persistence import AppendOnlyPersister, restore_db
 from src.server import Server
 
 REDIS_DEFAULT_PORT = 6380
@@ -20,9 +21,12 @@ def main(port=None):
   print(f"Starting PyRedis on port: {port}")
 
   datastore = DataStore()
+  if not restore_db('ccdb.aof', datastore):
+     return -1
+  persister = AppendOnlyPersister('ccdb.aof')
   expiration_monitor = threading.Thread(target=check_expiry, args=(datastore,))
   expiration_monitor.start()
-  server = Server(port, datastore)
+  server = Server(port, datastore, persister)
   server.run()
 
 if __name__ == "__main__":

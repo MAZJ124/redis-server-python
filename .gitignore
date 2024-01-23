@@ -6,6 +6,9 @@ __pycache__/
 # C extensions
 *.so
 
+# Aof file for datastore persistency 
+*.aof
+
 # Distribution / packaging
 .Python
 build/

@@ -7,7 +7,7 @@ from src.protocol_handler import encode_message, extract_frame_from_buffer
 
 RECV_SIZE = 1024
 
-def handle_client_connection(client_socket, datastore):
+def handle_client_connection(client_socket, datastore, persister):
     buffer = bytearray()
     try:
         while True:
@@ -18,17 +18,18 @@ def handle_client_connection(client_socket, datastore):
             frame, frame_size = extract_frame_from_buffer(data)
             if frame:
                 buffer = buffer[frame_size:]
-                result = handle_command(frame, datastore)
+                result = handle_command(frame, datastore, persister)
                 print(result) # for dev testing purpose only
                 client_socket.send(encode_message(result))
     finally:
         client_socket.close()
 
 class Server:
-    def __init__(self, port, datastore):
+    def __init__(self, port, datastore, persister):
         self.port = port
         self._running = False
         self._datastore = datastore
+        self._persister = persister
 
     def run(self):
         self._running = True
@@ -42,7 +43,7 @@ class Server:
             while self._running:
                 comm_socket, _ = server_socket.accept()
                 client_thread = threading.Thread(
-                    target=handle_client_connection, args=(comm_socket, self._datastore)
+                    target=handle_client_connection, args=(comm_socket, self._datastore, self._persister)
                 )
                 client_thread.start()
 
